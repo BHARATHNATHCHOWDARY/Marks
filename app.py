@@ -12,8 +12,8 @@ app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
 # List of allowed emails and the required password
-allowed_emails = ['bharad008@rmkcet.ac.in', 'barathnathchowdary@gmail.com']
-required_password = '9347611553'
+allowed_emails = ['', '']
+required_password = ''
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
