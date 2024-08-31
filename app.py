@@ -9,11 +9,9 @@ from email.mime.base import MIMEBase
 from email import encoders
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"
+app.secret_key = '9347611553' # Necessary for flash messages
 
-# List of allowed emails and the required password
 allowed_emails = ['bharad008@rmkcet.ac.in', 'barathnathchowdary@gmail.com']
-required_password = '9347611553'
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -21,7 +19,7 @@ def login():
         email = request.form['email']
         password = request.form['password']
 
-        if email in allowed_emails and password == required_password:
+        if email in allowed_emails and password == os.environ.get('REQUIRED_PASSWORD'):
             return redirect(url_for('upload'))
         else:
             flash('Invalid email or password.')
@@ -32,12 +30,10 @@ def login():
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
-        # Save the uploaded file
         file = request.files['file']
         file_path = os.path.join('uploads', file.filename)
         file.save(file_path)
 
-        # Process the Excel file
         df = pd.read_excel(file_path)
         for index, row in df.iterrows():
             name = row['Name']
@@ -51,7 +47,6 @@ def upload():
             college_reg_no = row['College Registration Number']
             percentage = row['Percentage']
 
-            # Generate PDF report
             pdf = FPDF()
             pdf.add_page()
             pdf.set_font("Arial", size=12)
@@ -66,23 +61,22 @@ def upload():
             pdf.cell(200, 10, txt=f"Percentage: {percentage}", ln=True)
             pdf.cell(200, 10, txt=f"College Registration Number: {college_reg_no}", ln=True)
 
-            # Save the PDF
             pdf_file_path = os.path.join('reports', f"{name}_report.pdf")
             pdf.output(pdf_file_path)
 
-            # Send the email with the report
-            from_email = "bharad008@rmkcet.ac.in"
+            from_email = os.environ.get('SENDER_EMAIL')
+            email_password = os.environ.get('EMAIL_PASSWORD')
             to_email = counselor_email
             subject = f"Report for {name}"
             body = f"Please find the report for {name} attached."
-            send_email(from_email, to_email, subject, body, pdf_file_path)
+            send_email(from_email, to_email, subject, body, pdf_file_path, email_password)
 
         flash('Reports generated and sent successfully.')
         return redirect(url_for('upload'))
 
     return render_template('upload.html')
 
-def send_email(from_email, to_email, subject, body, attachment):
+def send_email(from_email, to_email, subject, body, attachment, email_password):
     msg = MIMEMultipart()
     msg['From'] = from_email
     msg['To'] = to_email
@@ -100,14 +94,12 @@ def send_email(from_email, to_email, subject, body, attachment):
 
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.starttls()
-    server.login(from_email, "your-email-password")  # Replace with your email password
+    server.login(from_email, email_password)
     text = msg.as_string()
     server.sendmail(from_email, to_email, text)
     server.quit()
 
-if __name__ == "__main__":
-    if not os.path.exists('uploads'):
-        os.makedirs('uploads')
-    if not os.path.exists('reports'):
-        os.makedirs('reports')
+if __name__ == '__main__':
+    os.makedirs('uploads', exist_ok=True)
+    os.makedirs('reports', exist_ok=True)
     app.run(debug=True)
