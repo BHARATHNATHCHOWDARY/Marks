@@ -11,7 +11,13 @@ from email import encoders
 app = Flask(__name__)
 app.secret_key = '9347611553' # Necessary for flash messages
 
+<<<<<<< HEAD
 allowed_emails = ['bharad008@rmkcet.ac.in', 'barathnathchowdary@gmail.com']
+=======
+# List of allowed emails and the required password
+allowed_emails = ['', '']
+required_password = ''
+>>>>>>> 596aed0bee9e1d1c5f151c8d16bcc2f41f7718df
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
